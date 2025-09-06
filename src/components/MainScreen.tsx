@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
+import { checkIfHasSMSPermission, requestReadSMSPermission } from '@maniac-tech/react-native-expo-read-sms';
+import { PermissionsAndroid } from 'react-native';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
 import EmailScreen from '../screens/EmailScreen';
@@ -42,13 +44,18 @@ export default function MainScreen() {
           console.log('Media library permission check limited in Expo Go:', error.message);
           return { granted: false, canAskAgain: true };
         }),
-        Promise.resolve(false), // Fallback for SMS permission check
+        Platform.OS === 'android' 
+          ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).catch(() => false)
+          : checkIfHasSMSPermission().catch((error) => {
+              console.log('SMS permission check error:', error);
+              return false;
+            }),
       ]);
 
       const newStatuses = {
         camera: {
-          granted: cameraPermission?.granted || false,
-          canAskAgain: cameraPermission?.canAskAgain ?? true,
+          granted: Boolean(cameraPermission?.granted),
+          canAskAgain: cameraPermission?.canAskAgain !== false,
         },
         location: {
           granted: locationStatus.granted,
@@ -59,8 +66,8 @@ export default function MainScreen() {
           canAskAgain: mediaLibraryStatus.canAskAgain,
         },
         messages: { 
-          granted: smsPermissionStatus !== false, 
-          canAskAgain: smsPermissionStatus === false
+          granted: smsPermissionStatus === true, 
+          canAskAgain: smsPermissionStatus !== true
         },
       };
 
@@ -72,6 +79,16 @@ export default function MainScreen() {
         
         if (changed) {
           console.log(`Permission ${key} changed: granted ${oldStatus?.granted} -> ${newStatus?.granted}, canAskAgain ${oldStatus?.canAskAgain} -> ${newStatus?.canAskAgain}`);
+        }
+        
+        // Debug camera permission specifically
+        if (key === 'camera') {
+          console.log(`Camera permission debug - Hook: granted=${cameraPermission?.granted}, canAskAgain=${cameraPermission?.canAskAgain}, Status: granted=${newStatus?.granted}`);
+        }
+        
+        // Debug SMS permission specifically
+        if (key === 'messages') {
+          console.log(`SMS permission debug - Raw status: ${smsPermissionStatus}, Type: ${typeof smsPermissionStatus}, Final granted: ${newStatus?.granted}`);
         }
         
         return changed;
@@ -99,11 +116,12 @@ export default function MainScreen() {
     }, 10000); // Check every 10 seconds (reduced from 5)
 
     return () => clearInterval(interval);
-  }, []);
+  }, [cameraPermission]); // Add cameraPermission as dependency
 
   // Update permissions when camera permission hook updates - with debounce
   useEffect(() => {
     if (cameraPermission) {
+      console.log('Camera permission hook updated:', cameraPermission);
       // Add a small delay to prevent rapid updates
       const timeout = setTimeout(() => {
         checkGlobalPermissionStatuses();
@@ -234,12 +252,33 @@ export default function MainScreen() {
           }
           break;
         case 'messages':
-          Alert.alert(
-            'SMS Permission',
-            'SMS permission functionality is temporarily disabled. This will be enabled in the production build.',
-            [{ text: 'OK' }]
-          );
-          return;
+          try {
+            let result;
+            if (Platform.OS === 'android') {
+              result = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.READ_SMS,
+                {
+                  title: 'SMS Permission',
+                  message: 'This app needs access to your SMS messages to detect receipt confirmations.',
+                  buttonNeutral: 'Ask Me Later',
+                  buttonNegative: 'Cancel',
+                  buttonPositive: 'OK',
+                }
+              );
+              console.log('Android SMS permission result:', result);
+            } else {
+              result = await requestReadSMSPermission();
+              console.log('iOS SMS permission result:', result);
+            }
+          } catch (smsError) {
+            console.error('SMS permission request failed:', smsError);
+            Alert.alert(
+              'SMS Permission',
+              'Unable to request SMS permission. Please enable it manually in device settings if needed.',
+              [{ text: 'OK' }]
+            );
+          }
+          break;
         default:
           return;
       }
