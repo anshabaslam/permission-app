@@ -12,7 +12,6 @@ export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
   const [achievement, setAchievement] = useState('Separate personal and business expenses');
   const [workType, setWorkType] = useState('Freelancer / Independent Contractor');
   const [sector, setSector] = useState('Real Estate (Agents, Property Management)');
-  const [drawerType, setDrawerType] = useState<'achievement' | 'workType' | 'sector' | null>(null);
 
   const achievementOptions = [
     'Separate personal and business expenses',
@@ -50,20 +49,19 @@ export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
       const currentValue = getCurrentValueForType(type);
       
       onDrawerOpen(type, title, options, currentValue, (selectedValue) => {
-        selectOption(selectedValue);
+        selectOptionByType(type, selectedValue);
       });
     }
   };
 
-  const selectOption = (option: string) => {
-    if (drawerType === 'achievement') {
+  const selectOptionByType = (type: 'achievement' | 'workType' | 'sector', option: string) => {
+    if (type === 'achievement') {
       setAchievement(option);
-    } else if (drawerType === 'workType') {
+    } else if (type === 'workType') {
       setWorkType(option);
-    } else if (drawerType === 'sector') {
+    } else if (type === 'sector') {
       setSector(option);
     }
-    setDrawerType(null);
   };
 
   const getCurrentOptionsForType = (type: 'achievement' | 'workType' | 'sector') => {
@@ -102,7 +100,7 @@ export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
               <Text style={styles.label}>What are you hoping to achieve?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('achievement')}>
-              <Text style={styles.dropdownText}>{achievement}</Text>
+              <Text style={styles.dropdownText} numberOfLines={1} ellipsizeMode="tail">{achievement}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
@@ -115,7 +113,7 @@ export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
               <Text style={styles.label}>Who are you, how do you work?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('workType')}>
-              <Text style={styles.dropdownText}>{workType}</Text>
+              <Text style={styles.dropdownText} numberOfLines={1} ellipsizeMode="tail">{workType}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
@@ -128,7 +126,7 @@ export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
               <Text style={styles.label}>What sector do you primarily operate in?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('sector')}>
-              <Text style={styles.dropdownText}>{sector}</Text>
+              <Text style={styles.dropdownText} numberOfLines={1} ellipsizeMode="tail">{sector}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
@@ -229,7 +227,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   dropdownText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#1F2937',
     flex: 1,
     fontWeight: '500',
