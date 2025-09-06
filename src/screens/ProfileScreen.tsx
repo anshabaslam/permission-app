@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
@@ -17,8 +17,7 @@ export default function ProfileScreen() {
         <View style={styles.formSection}>
           <View style={styles.dropdownContainer}>
             <View style={styles.labelContainer}>
-              <View style={styles.labelBgLeft} />
-              <View style={styles.labelBgRight} />
+              <View style={styles.labelBackground} />
               <Text style={styles.label}>What are you hoping to achieve?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown}>
@@ -31,8 +30,7 @@ export default function ProfileScreen() {
         <View style={styles.formSection}>
           <View style={styles.dropdownContainer}>
             <View style={styles.labelContainer}>
-              <View style={styles.labelBgLeft} />
-              <View style={styles.labelBgRight} />
+              <View style={styles.labelBackground} />
               <Text style={styles.label}>Who are you, how do you work?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown}>
@@ -45,8 +43,7 @@ export default function ProfileScreen() {
         <View style={styles.formSection}>
           <View style={styles.dropdownContainer}>
             <View style={styles.labelContainer}>
-              <View style={styles.labelBgLeft} />
-              <View style={styles.labelBgRight} />
+              <View style={styles.labelBackground} />
               <Text style={styles.label}>What sector do you primarily operate in?</Text>
             </View>
             <TouchableOpacity style={styles.dropdown}>
@@ -97,29 +94,49 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     left: 12,
-    zIndex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'center',
+    ...Platform.select({
+      android: {
+        elevation: 5,
+        zIndex: 5,
+      },
+      ios: {
+        zIndex: 2,
+      },
+    }),
   },
-  labelBgLeft: {
+  labelBackground: {
     position: 'absolute',
-    top: 0,
-    width: '100%',
-    height: 8,
+    top: -1,
+    left: -4,
+    right: -4,
+    height: 18,
     backgroundColor: '#F3F0FF',
-  },
-  labelBgRight: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: 6,
-    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      android: {
+        elevation: 5,
+        zIndex: 5,
+      },
+      ios: {
+        zIndex: 1,
+      },
+    }),
   },
   label: {
     fontSize: 12,
     color: '#6B7280',
     paddingHorizontal: 4,
-    zIndex: 2,
     position: 'relative',
+    ...Platform.select({
+      android: {
+        elevation: 6,
+        zIndex: 6,
+      },
+      ios: {
+        zIndex: 3,
+      },
+    }),
   },
   dropdown: {
     flexDirection: 'row',
@@ -132,6 +149,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     minHeight: 56,
+    ...Platform.select({
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   dropdownText: {
     fontSize: 16,
