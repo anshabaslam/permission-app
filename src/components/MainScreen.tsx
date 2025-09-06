@@ -34,6 +34,7 @@ export default function MainScreen() {
   
   const drawerAnimValue = useRef(new Animated.Value(0)).current;
   const backdropAnimValue = useRef(new Animated.Value(0)).current;
+  const lastCameraPermissionRef = useRef<boolean | null>(null);
 
   // Global permission checking function
   const checkGlobalPermissionStatuses = async () => {
@@ -45,16 +46,29 @@ export default function MainScreen() {
           return { granted: false, canAskAgain: true };
         }),
         Platform.OS === 'android' 
-          ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).catch(() => false)
+          ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).then(result => {
+              console.log('Android SMS permission check result:', result);
+              return result === PermissionsAndroid.RESULTS.GRANTED;
+            }).catch((error) => {
+              console.log('Android SMS permission check error:', error);
+              return false;
+            })
           : checkIfHasSMSPermission().catch((error) => {
               console.log('SMS permission check error:', error);
               return false;
             }),
       ]);
 
+      // Check for camera permission stability to prevent rapid toggling
+      const currentCameraGranted = cameraPermission?.granted === true;
+      if (lastCameraPermissionRef.current !== null && lastCameraPermissionRef.current !== currentCameraGranted) {
+        console.log(`Camera permission changed from ${lastCameraPermissionRef.current} to ${currentCameraGranted}`);
+      }
+      lastCameraPermissionRef.current = currentCameraGranted;
+
       const newStatuses = {
         camera: {
-          granted: Boolean(cameraPermission?.granted),
+          granted: currentCameraGranted,
           canAskAgain: cameraPermission?.canAskAgain !== false,
         },
         location: {
@@ -88,7 +102,7 @@ export default function MainScreen() {
         
         // Debug SMS permission specifically
         if (key === 'messages') {
-          console.log(`SMS permission debug - Raw status: ${smsPermissionStatus}, Type: ${typeof smsPermissionStatus}, Final granted: ${newStatus?.granted}`);
+          console.log(`SMS permission debug - Platform: ${Platform.OS}, Raw status: ${smsPermissionStatus}, Type: ${typeof smsPermissionStatus}, Final granted: ${newStatus?.granted}`);
         }
         
         return changed;
@@ -113,23 +127,23 @@ export default function MainScreen() {
     // Set up interval for periodic checks - reduced frequency to avoid conflicts
     const interval = setInterval(() => {
       checkGlobalPermissionStatuses();
-    }, 10000); // Check every 10 seconds (reduced from 5)
+    }, 15000); // Check every 15 seconds (reduced to prevent conflicts)
 
     return () => clearInterval(interval);
   }, [cameraPermission]); // Add cameraPermission as dependency
 
-  // Update permissions when camera permission hook updates - with debounce
+  // Update permissions when camera permission hook updates - with debounce and stability check
   useEffect(() => {
-    if (cameraPermission) {
+    if (cameraPermission && cameraPermission.granted !== undefined) {
       console.log('Camera permission hook updated:', cameraPermission);
-      // Add a small delay to prevent rapid updates
+      // Add a longer delay to ensure permission state is stable
       const timeout = setTimeout(() => {
         checkGlobalPermissionStatuses();
-      }, 200);
+      }, 1000); // Increased delay for stability
       
       return () => clearTimeout(timeout);
     }
-  }, [cameraPermission]);
+  }, [cameraPermission?.granted, cameraPermission?.canAskAgain]); // Only depend on specific properties
 
   // Handle app state changes - reduced frequency to prevent conflicts
   useEffect(() => {
@@ -265,7 +279,20 @@ export default function MainScreen() {
                   buttonPositive: 'OK',
                 }
               );
-              console.log('Android SMS permission result:', result);
+              console.log('Android SMS permission request result:', result);
+              
+              if (result === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('SMS permission granted successfully');
+              } else if (result === PermissionsAndroid.RESULTS.DENIED) {
+                console.log('SMS permission denied');
+              } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+                console.log('SMS permission denied permanently');
+                Alert.alert(
+                  'Permission Required',
+                  'SMS permission was denied. Please enable it manually in Settings > Apps > Permission Manager > Permissions > SMS.',
+                  [{ text: 'OK' }]
+                );
+              }
             } else {
               result = await requestReadSMSPermission();
               console.log('iOS SMS permission result:', result);
@@ -273,8 +300,8 @@ export default function MainScreen() {
           } catch (smsError) {
             console.error('SMS permission request failed:', smsError);
             Alert.alert(
-              'SMS Permission',
-              'Unable to request SMS permission. Please enable it manually in device settings if needed.',
+              'SMS Permission Error',
+              'Unable to request SMS permission. Please try again or enable it manually in device settings.',
               [{ text: 'OK' }]
             );
           }
