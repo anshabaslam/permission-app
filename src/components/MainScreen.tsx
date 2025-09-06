@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform, Animated, Dimensions, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform, Animated, Dimensions, PanResponder, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -244,18 +244,25 @@ export default function MainScreen() {
               </TouchableOpacity>
             </View>
             
-            <View style={styles.optionsList}>
+            <ScrollView 
+              style={styles.optionsList}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+            >
               {drawerOptions.map((option, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.optionItem}
+                  style={[
+                    styles.optionItem,
+                    index === drawerOptions.length - 1 && { borderBottomWidth: 0 }
+                  ]}
                   onPress={() => selectGlobalOption(option)}
                 >
                   <Text style={styles.optionText}>{option}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  <Ionicons name="chevron-forward" size={18} color="#C7B9ED" />
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
           </Animated.View>
         </>
       )}
@@ -359,58 +366,71 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '50%',
-    minHeight: '40%',
+    maxHeight: '45%',
+    minHeight: '35%',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     zIndex: 1001,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   drawerHandle: {
-    width: 40,
+    width: 36,
     height: 4,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: '#C7B9ED',
     borderRadius: 2,
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 12,
+    marginBottom: 8,
   },
   drawerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F3F0FF',
   },
   drawerTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: '#1F2937',
     flex: 1,
+    letterSpacing: -0.2,
   },
   closeButton: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 20,
+    backgroundColor: '#F3F0FF',
   },
   optionsList: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    maxHeight: 280,
   },
   optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 4,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F9FAFB',
+    borderBottomColor: '#F3F0FF',
+    borderRadius: 8,
+    marginVertical: 2,
+    backgroundColor: '#FEFEFE',
   },
   optionText: {
     fontSize: 15,
     color: '#1F2937',
     flex: 1,
-    fontWeight: '400',
+    fontWeight: '500',
+    letterSpacing: -0.1,
   },
 });
