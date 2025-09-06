@@ -3,13 +3,7 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// SMS library temporarily disabled for build compatibility
-// TODO: Re-enable after resolving build issues
-// declare module '@maniac-tech/react-native-expo-read-sms' {
-//   export function checkIfHasSMSPermission(): Promise<boolean | object>;
-//   export function requestReadSMSPermission(): Promise<any>;
-// }
-// import { checkIfHasSMSPermission, requestReadSMSPermission } from '@maniac-tech/react-native-expo-read-sms';
+// SMS functionality now handled using expo-sms and native Android permissions
 
 interface Permission {
   id: string;

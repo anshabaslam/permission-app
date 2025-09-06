@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
-import { checkIfHasSMSPermission, requestReadSMSPermission } from '@maniac-tech/react-native-expo-read-sms';
+import * as SMS from 'expo-sms';
 import { PermissionsAndroid } from 'react-native';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
@@ -48,13 +48,16 @@ export default function MainScreen() {
         Platform.OS === 'android' 
           ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).then(result => {
               console.log('Android SMS permission check result:', result);
-              return result === PermissionsAndroid.RESULTS.GRANTED;
+              return result;
             }).catch((error) => {
               console.log('Android SMS permission check error:', error);
               return false;
             })
-          : checkIfHasSMSPermission().catch((error) => {
-              console.log('SMS permission check error:', error);
+          : SMS.isAvailableAsync().then(available => {
+              console.log('iOS SMS availability:', available);
+              return available;
+            }).catch((error) => {
+              console.log('SMS availability check error:', error);
               return false;
             }),
       ]);
@@ -80,8 +83,8 @@ export default function MainScreen() {
           canAskAgain: mediaLibraryStatus.canAskAgain,
         },
         messages: { 
-          granted: smsPermissionStatus === true, 
-          canAskAgain: smsPermissionStatus !== true
+          granted: Platform.OS === 'android' ? smsPermissionStatus === true : smsPermissionStatus === true, 
+          canAskAgain: Platform.OS === 'android' ? smsPermissionStatus !== true : smsPermissionStatus !== true
         },
       };
 
@@ -267,26 +270,36 @@ export default function MainScreen() {
           break;
         case 'messages':
           try {
-            let result;
             if (Platform.OS === 'android') {
-              result = await PermissionsAndroid.request(
+              console.log('Requesting Android SMS permission...');
+              const result = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.READ_SMS,
                 {
-                  title: 'SMS Permission',
-                  message: 'This app needs access to your SMS messages to detect receipt confirmations.',
+                  title: 'SMS Permission Required',
+                  message: 'This app needs access to your SMS messages to automatically detect receipt confirmations and transaction messages.',
                   buttonNeutral: 'Ask Me Later',
                   buttonNegative: 'Cancel',
-                  buttonPositive: 'OK',
+                  buttonPositive: 'Allow',
                 }
               );
               console.log('Android SMS permission request result:', result);
               
               if (result === PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('SMS permission granted successfully');
+                console.log('✅ SMS permission granted successfully');
+                Alert.alert(
+                  'Permission Granted',
+                  'SMS permission has been granted. The app can now detect receipt confirmations.',
+                  [{ text: 'OK' }]
+                );
               } else if (result === PermissionsAndroid.RESULTS.DENIED) {
-                console.log('SMS permission denied');
+                console.log('❌ SMS permission denied');
+                Alert.alert(
+                  'Permission Denied',
+                  'SMS permission was denied. You can enable it later in Settings.',
+                  [{ text: 'OK' }]
+                );
               } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-                console.log('SMS permission denied permanently');
+                console.log('❌ SMS permission denied permanently');
                 Alert.alert(
                   'Permission Required',
                   'SMS permission was denied. Please enable it manually in Settings > Apps > Permission Manager > Permissions > SMS.',
@@ -294,11 +307,25 @@ export default function MainScreen() {
                 );
               }
             } else {
-              result = await requestReadSMSPermission();
-              console.log('iOS SMS permission result:', result);
+              // For iOS, SMS functionality is limited
+              console.log('iOS SMS permission - checking availability...');
+              const available = await SMS.isAvailableAsync();
+              if (available) {
+                Alert.alert(
+                  'SMS Available',
+                  'SMS functionality is available on this device.',
+                  [{ text: 'OK' }]
+                );
+              } else {
+                Alert.alert(
+                  'SMS Not Available',
+                  'SMS functionality is not available on this device.',
+                  [{ text: 'OK' }]
+                );
+              }
             }
           } catch (smsError) {
-            console.error('SMS permission request failed:', smsError);
+            console.error('❌ SMS permission request failed:', smsError);
             Alert.alert(
               'SMS Permission Error',
               'Unable to request SMS permission. Please try again or enable it manually in device settings.',
@@ -310,10 +337,17 @@ export default function MainScreen() {
           return;
       }
 
-      // After requesting, check all permissions to update state - with longer delay
+      // Force immediate permission state update after request
       setTimeout(() => {
+        console.log('📊 Force checking permissions after request...');
         checkGlobalPermissionStatuses();
-      }, 500);
+      }, 100);
+      
+      // Double-check after a longer delay to ensure state is synced
+      setTimeout(() => {
+        console.log('🔄 Double-checking permissions...');
+        checkGlobalPermissionStatuses();
+      }, 1000);
     } catch (error) {
       console.error('Error requesting permission:', error);
       Alert.alert('Permission Error', 'Unable to request permission. Try on a physical device for full functionality.');
