@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    borderWidth: 2,
+    borderWidth: 0.7,
     borderColor: '#9CA3AF',
     paddingHorizontal: 14,
     paddingVertical: 12,
