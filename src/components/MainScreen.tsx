@@ -5,7 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
-import * as SMS from 'expo-sms';
 import { PermissionsAndroid } from 'react-native';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
@@ -57,13 +56,7 @@ export default function MainScreen() {
               console.log('❌ Android SMS permission check error:', error);
               return false;
             })
-          : SMS.isAvailableAsync().then(available => {
-              console.log('iOS SMS availability:', available);
-              return available;
-            }).catch((error) => {
-              console.log('SMS availability check error:', error);
-              return false;
-            }),
+          : Promise.resolve(false), // iOS SMS permission not supported without package
       ]);
 
       // Check for camera permission stability to prevent rapid toggling
@@ -73,35 +66,11 @@ export default function MainScreen() {
       if (lastCameraPermissionRef.current !== null && lastCameraPermissionRef.current !== currentCameraGranted) {
         console.log(`⚠️ Camera permission changed from ${lastCameraPermissionRef.current} to ${currentCameraGranted}`);
         
-        // If camera was granted but now appears denied, be more conservative
+        // If camera was granted but now appears denied, skip this update to prevent flickering
         if (lastCameraPermissionRef.current === true && currentCameraGranted === false) {
-          console.log('🔍 Camera permission revoked detected - using previous stable state for now');
-          // Keep using the last known granted state to prevent flickering
-          const stableCameraGranted = true;
-          lastCameraPermissionRef.current = stableCameraGranted;
-          
-          const newStatuses = {
-            camera: {
-              granted: stableCameraGranted, // Use stable state
-              canAskAgain: cameraPermission?.canAskAgain !== false,
-            },
-            location: {
-              granted: locationStatus.granted,
-              canAskAgain: locationStatus.canAskAgain,
-            },
-            photos: {
-              granted: mediaLibraryStatus.granted,
-              canAskAgain: mediaLibraryStatus.canAskAgain,
-            },
-            messages: { 
-              granted: Platform.OS === 'android' ? smsPermissionStatus === true : smsPermissionStatus === true, 
-              canAskAgain: Platform.OS === 'android' ? smsPermissionStatus !== true : smsPermissionStatus !== true
-            },
-          };
-          
-          // Update with stable camera state
-          setGlobalPermissionStatuses(newStatuses);
-          return; // Exit early with stable state
+          console.log('⚠️ Camera permission revoke detected - skipping update to prevent toggle flickering');
+          // Skip this update entirely - the permission is likely still granted in device settings
+          return;
         }
       }
       lastCameraPermissionRef.current = currentCameraGranted;
@@ -382,24 +351,13 @@ export default function MainScreen() {
                 );
               }
             } else {
-              // For iOS, SMS functionality is limited
-              console.log('📱 iOS SMS permission - checking availability...');
-              const available = await SMS.isAvailableAsync();
-              console.log('📱 iOS SMS availability:', available);
-              
-              if (available) {
-                Alert.alert(
-                  'SMS Available ✅',
-                  'SMS functionality is available on this iOS device.',
-                  [{ text: 'OK' }]
-                );
-              } else {
-                Alert.alert(
-                  'SMS Not Available ❌',
-                  'SMS functionality is not available on this iOS device.',
-                  [{ text: 'OK' }]
-                );
-              }
+              // iOS SMS permission not supported without additional packages
+              console.log('📱 iOS SMS permission not supported');
+              Alert.alert(
+                'iOS Not Supported',
+                'SMS permission is only supported on Android devices in this app.',
+                [{ text: 'OK' }]
+              );
             }
           } catch (smsError) {
             console.error('❌ SMS permission request failed with error:', smsError);

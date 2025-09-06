@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// SMS functionality now handled using expo-sms and native Android permissions
+// SMS functionality handled using only native Android PermissionsAndroid API
 
 interface Permission {
   id: string;

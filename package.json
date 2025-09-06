@@ -17,7 +17,6 @@
     "expo-camera": "~16.1.11",
     "expo-location": "~18.1.6",
     "expo-media-library": "~17.1.7",
-    "expo-sms": "~13.1.4",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
