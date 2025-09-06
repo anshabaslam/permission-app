@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Permission Manager",
-    "slug": "hai-app",
+    "name": "Permission Pro",
+    "slug": "permission-pro",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,7 +28,7 @@
         "backgroundColor": "#F3F0FF"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.permissionmanager.app",
+      "package": "com.permission.pro",
       "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
@@ -46,8 +46,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "d7302e9b-d736-4261-b3bb-3f97b68eb48e"
+        "projectId": "bf044075-bec9-416b-b770-336a2d8deba7"
       }
-    }
+    },
+    "owner": "anshab00"
   }
 }
