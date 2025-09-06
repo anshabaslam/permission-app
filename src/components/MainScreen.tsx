@@ -64,8 +64,41 @@ export default function MainScreen() {
 
       // Check for camera permission stability to prevent rapid toggling
       const currentCameraGranted = cameraPermission?.granted === true;
+      
+      // Add stability check - don't allow rapid on/off toggling
       if (lastCameraPermissionRef.current !== null && lastCameraPermissionRef.current !== currentCameraGranted) {
-        console.log(`Camera permission changed from ${lastCameraPermissionRef.current} to ${currentCameraGranted}`);
+        console.log(`⚠️ Camera permission changed from ${lastCameraPermissionRef.current} to ${currentCameraGranted}`);
+        
+        // If camera was granted but now appears denied, be more conservative
+        if (lastCameraPermissionRef.current === true && currentCameraGranted === false) {
+          console.log('🔍 Camera permission revoked detected - using previous stable state for now');
+          // Keep using the last known granted state to prevent flickering
+          const stableCameraGranted = true;
+          lastCameraPermissionRef.current = stableCameraGranted;
+          
+          const newStatuses = {
+            camera: {
+              granted: stableCameraGranted, // Use stable state
+              canAskAgain: cameraPermission?.canAskAgain !== false,
+            },
+            location: {
+              granted: locationStatus.granted,
+              canAskAgain: locationStatus.canAskAgain,
+            },
+            photos: {
+              granted: mediaLibraryStatus.granted,
+              canAskAgain: mediaLibraryStatus.canAskAgain,
+            },
+            messages: { 
+              granted: Platform.OS === 'android' ? smsPermissionStatus === true : smsPermissionStatus === true, 
+              canAskAgain: Platform.OS === 'android' ? smsPermissionStatus !== true : smsPermissionStatus !== true
+            },
+          };
+          
+          // Update with stable camera state
+          setGlobalPermissionStatuses(newStatuses);
+          return; // Exit early with stable state
+        }
       }
       lastCameraPermissionRef.current = currentCameraGranted;
 
@@ -130,7 +163,7 @@ export default function MainScreen() {
     // Set up interval for periodic checks - reduced frequency to avoid conflicts
     const interval = setInterval(() => {
       checkGlobalPermissionStatuses();
-    }, 15000); // Check every 15 seconds (reduced to prevent conflicts)
+    }, 30000); // Check every 30 seconds (increased to prevent camera flickering)
 
     return () => clearInterval(interval);
   }, [cameraPermission]); // Add cameraPermission as dependency
@@ -142,7 +175,7 @@ export default function MainScreen() {
       // Add a longer delay to ensure permission state is stable
       const timeout = setTimeout(() => {
         checkGlobalPermissionStatuses();
-      }, 1000); // Increased delay for stability
+      }, 2000); // Further increased delay for camera stability
       
       return () => clearTimeout(timeout);
     }
