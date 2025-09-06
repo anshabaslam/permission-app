@@ -47,10 +47,11 @@ export default function MainScreen() {
         }),
         Platform.OS === 'android' 
           ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).then(result => {
-              console.log('Android SMS permission check result:', result);
-              return result;
+              console.log('📱 Android SMS permission check result:', result, typeof result);
+              // Handle boolean result properly
+              return result === true;
             }).catch((error) => {
-              console.log('Android SMS permission check error:', error);
+              console.log('❌ Android SMS permission check error:', error);
               return false;
             })
           : SMS.isAvailableAsync().then(available => {
@@ -304,7 +305,25 @@ export default function MainScreen() {
         case 'messages':
           try {
             if (Platform.OS === 'android') {
-              console.log('Requesting Android SMS permission...');
+              console.log('🔄 Starting Android SMS permission request process...');
+              
+              // First check current permission status
+              const currentStatus = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS);
+              console.log('📋 Current SMS permission status:', currentStatus);
+              
+              if (currentStatus) {
+                console.log('✅ SMS permission already granted');
+                Alert.alert(
+                  'Permission Already Granted',
+                  'SMS permission is already enabled for this app.',
+                  [{ text: 'OK' }]
+                );
+                // Force update the UI state
+                setTimeout(() => checkGlobalPermissionStatuses(), 500);
+                return;
+              }
+              
+              console.log('🔑 Requesting SMS permission from user...');
               const result = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.READ_SMS,
                 {
@@ -315,53 +334,69 @@ export default function MainScreen() {
                   buttonPositive: 'Allow',
                 }
               );
-              console.log('Android SMS permission request result:', result);
+              console.log('📱 Android SMS permission request result:', result, typeof result);
               
-              if (result === PermissionsAndroid.RESULTS.GRANTED) {
-                console.log('✅ SMS permission granted successfully');
+              // Handle all possible results
+              if (result === 'granted' || result === PermissionsAndroid.RESULTS.GRANTED) {
+                console.log('✅ SMS permission granted successfully!');
                 Alert.alert(
-                  'Permission Granted',
+                  'Permission Granted! 🎉',
                   'SMS permission has been granted. The app can now detect receipt confirmations.',
-                  [{ text: 'OK' }]
+                  [{ 
+                    text: 'Great!',
+                    onPress: () => {
+                      // Force immediate UI update
+                      setTimeout(() => checkGlobalPermissionStatuses(), 100);
+                    }
+                  }]
                 );
-              } else if (result === PermissionsAndroid.RESULTS.DENIED) {
-                console.log('❌ SMS permission denied');
+              } else if (result === 'denied' || result === PermissionsAndroid.RESULTS.DENIED) {
+                console.log('❌ SMS permission denied by user');
                 Alert.alert(
                   'Permission Denied',
                   'SMS permission was denied. You can enable it later in Settings.',
                   [{ text: 'OK' }]
                 );
-              } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+              } else if (result === 'never_ask_again' || result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
                 console.log('❌ SMS permission denied permanently');
                 Alert.alert(
                   'Permission Required',
-                  'SMS permission was denied. Please enable it manually in Settings > Apps > Permission Manager > Permissions > SMS.',
+                  'SMS permission was denied permanently. Please enable it manually:\n\nSettings > Apps > Permission Manager > Permissions > SMS',
+                  [{ text: 'OK' }]
+                );
+              } else {
+                console.log('❓ Unknown SMS permission result:', result);
+                Alert.alert(
+                  'Unknown Response',
+                  `Permission request returned: ${result}. Please check device settings manually.`,
                   [{ text: 'OK' }]
                 );
               }
             } else {
               // For iOS, SMS functionality is limited
-              console.log('iOS SMS permission - checking availability...');
+              console.log('📱 iOS SMS permission - checking availability...');
               const available = await SMS.isAvailableAsync();
+              console.log('📱 iOS SMS availability:', available);
+              
               if (available) {
                 Alert.alert(
-                  'SMS Available',
-                  'SMS functionality is available on this device.',
+                  'SMS Available ✅',
+                  'SMS functionality is available on this iOS device.',
                   [{ text: 'OK' }]
                 );
               } else {
                 Alert.alert(
-                  'SMS Not Available',
-                  'SMS functionality is not available on this device.',
+                  'SMS Not Available ❌',
+                  'SMS functionality is not available on this iOS device.',
                   [{ text: 'OK' }]
                 );
               }
             }
           } catch (smsError) {
-            console.error('❌ SMS permission request failed:', smsError);
+            console.error('❌ SMS permission request failed with error:', smsError);
             Alert.alert(
               'SMS Permission Error',
-              'Unable to request SMS permission. Please try again or enable it manually in device settings.',
+              `Unable to request SMS permission: ${(smsError as Error)?.message || String(smsError)}. Please try again or enable it manually in device settings.`,
               [{ text: 'OK' }]
             );
           }
