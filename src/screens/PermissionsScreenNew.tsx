@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, AppState } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useCameraPermissions } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Location from 'expo-location';
-import * as MediaLibrary from 'expo-media-library';
 
 // SMS library temporarily disabled for build compatibility
 // TODO: Re-enable after resolving build issues
@@ -73,141 +70,57 @@ function PermissionItem({ permission, onPress }: PermissionItemProps) {
   );
 }
 
-export default function PermissionsScreen() {
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+interface PermissionsScreenProps {
+  globalPermissionStatuses?: {
+    camera: { granted: boolean; canAskAgain: boolean };
+    location: { granted: boolean; canAskAgain: boolean };
+    photos: { granted: boolean; canAskAgain: boolean };
+    messages: { granted: boolean; canAskAgain: boolean };
+  };
+  onPermissionRequest?: (permissionId: string) => void;
+}
+
+export default function PermissionsScreen({ 
+  globalPermissionStatuses, 
+  onPermissionRequest 
+}: PermissionsScreenProps) {
   const insets = useSafeAreaInsets();
   
-  const [permissions, setPermissions] = useState<Permission[]>([
+  // Use global permission statuses - already pre-loaded from MainScreen
+  const permissions: Permission[] = [
     {
       id: 'camera',
       name: 'Camera',
       description: 'Scan paper receipts instantly',
       icon: 'camera',
-      status: null,
+      status: globalPermissionStatuses?.camera || { granted: false, canAskAgain: true },
     },
     {
       id: 'photos',
       name: 'Photos',
       description: 'Organize receipts from gallery',
       icon: 'images',
-      status: null,
+      status: globalPermissionStatuses?.photos || { granted: false, canAskAgain: true },
     },
     {
       id: 'messages',
       name: 'Messages',
       description: 'Auto-detect receipt confirmations',
       icon: 'chatbubble',
-      status: null,
+      status: globalPermissionStatuses?.messages || { granted: false, canAskAgain: true },
     },
     {
       id: 'location',
       name: 'Location',
       description: 'Log transaction locations',
       icon: 'location',
-      status: null,
+      status: globalPermissionStatuses?.location || { granted: false, canAskAgain: true },
     },
-  ]);
-
-  const checkPermissionStatuses = async () => {
-    try {
-      const [locationStatus, mediaLibraryStatus, smsPermissionStatus] = await Promise.all([
-        Location.getForegroundPermissionsAsync().catch(() => ({ granted: false, canAskAgain: true })),
-        MediaLibrary.getPermissionsAsync().catch((error) => {
-          // Handle Expo Go limitation gracefully
-          console.log('Media library permission check limited in Expo Go:', error.message);
-          return { granted: false, canAskAgain: true };
-        }),
-        // Temporarily disabled: checkIfHasSMSPermission().catch(() => false),
-        Promise.resolve(false), // Fallback for SMS permission check
-      ]);
-
-      setPermissions(prev => prev.map(permission => {
-        let newStatus;
-        
-        switch (permission.id) {
-          case 'camera':
-            newStatus = {
-              granted: cameraPermission?.granted || false,
-              canAskAgain: cameraPermission?.canAskAgain ?? true,
-            };
-            break;
-          case 'location':
-            newStatus = {
-              granted: locationStatus.granted,
-              canAskAgain: locationStatus.canAskAgain,
-            };
-            break;
-          case 'photos':
-            newStatus = {
-              granted: mediaLibraryStatus.granted,
-              canAskAgain: mediaLibraryStatus.canAskAgain,
-            };
-            break;
-          case 'messages':
-            // Use real SMS permission status
-            newStatus = { 
-              granted: smsPermissionStatus !== false, 
-              canAskAgain: smsPermissionStatus === false
-            };
-            break;
-          default:
-            newStatus = permission.status;
-        }
-
-        return {
-          ...permission,
-          status: newStatus,
-        };
-      }));
-    } catch (error) {
-      console.error('❌ Error checking permissions:', error);
-      // On error, keep existing status or set to default
-    }
-  };
+  ];
 
   const requestPermission = async (permissionId: string) => {
-    try {      
-      switch (permissionId) {
-        case 'camera':
-          await requestCameraPermission();
-          break;
-        case 'location':
-          await Location.requestForegroundPermissionsAsync();
-          break;
-        case 'photos':
-          try {
-            await MediaLibrary.requestPermissionsAsync();
-          } catch (error: any) {
-            if (error.message?.includes('Expo Go')) {
-              Alert.alert(
-                'Limited in Expo Go', 
-                'Photo permissions have limited functionality in Expo Go. For full testing, create a development build.',
-                [{ text: 'OK' }]
-              );
-            } else {
-              throw error;
-            }
-          }
-          break;
-        case 'messages':
-          // Temporarily show placeholder for SMS permission (library disabled for build)
-          Alert.alert(
-            'SMS Permission',
-            'SMS permission functionality is temporarily disabled. This will be enabled in the production build.',
-            [{ text: 'OK' }]
-          );
-          return;
-        default:
-          return;
-      }
-
-      // After requesting, check all permissions to update state
-      setTimeout(() => {
-        checkPermissionStatuses();
-      }, 100);
-    } catch (error) {
-      console.error('Error requesting permission:', error);
-      Alert.alert('Permission Error', 'Unable to request permission. Try on a physical device for full functionality.');
+    if (onPermissionRequest) {
+      onPermissionRequest(permissionId);
     }
   };
 
@@ -243,49 +156,9 @@ export default function PermissionsScreen() {
       } else {
         requestPermission(permission.id);
       }
-    } else {
-      // If already granted, check status again to ensure it's still granted
-      checkPermissionStatuses();
     }
+    // Note: No longer checking permissions here - handled globally in MainScreen
   };
-
-  // Check permissions periodically while component is mounted
-  useEffect(() => {
-    checkPermissionStatuses();
-    
-    // Set up interval to check periodically while screen is active
-    const interval = setInterval(() => {
-      checkPermissionStatuses();
-    }, 2000); // Check every 2 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update permissions when camera permission hook updates
-  useEffect(() => {
-    if (cameraPermission) {
-      checkPermissionStatuses();
-    }
-  }, [cameraPermission]);
-
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'active') {
-        // Check immediately when app becomes active
-        checkPermissionStatuses();
-        // Also check after a short delay in case permissions were changed
-        setTimeout(() => {
-          checkPermissionStatuses();
-        }, 500);
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
-    return () => {
-      subscription?.remove();
-    };
-  }, []);
 
   return (
     <View style={styles.container}>

@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform, Animated, Dimensions, PanResponder, ScrollView } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform, Animated, Dimensions, PanResponder, ScrollView, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useCameraPermissions } from 'expo-camera';
+import * as Location from 'expo-location';
+import * as MediaLibrary from 'expo-media-library';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
 import EmailScreen from '../screens/EmailScreen';
@@ -11,6 +14,7 @@ const { height: screenHeight } = Dimensions.get('window');
 export default function MainScreen() {
   const [activeTab, setActiveTab] = useState<'Profile' | 'Permission' | 'Email'>('Permission');
   const insets = useSafeAreaInsets();
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   
   // Global drawer state
   const [isGlobalDrawerVisible, setIsGlobalDrawerVisible] = useState(false);
@@ -18,8 +22,114 @@ export default function MainScreen() {
   const [drawerOptions, setDrawerOptions] = useState<string[]>([]);
   const [drawerOnSelect, setDrawerOnSelect] = useState<((value: string) => void) | null>(null);
   
+  // Global permission state - pre-loaded
+  const [globalPermissionStatuses, setGlobalPermissionStatuses] = useState({
+    camera: { granted: false, canAskAgain: true },
+    location: { granted: false, canAskAgain: true },
+    photos: { granted: false, canAskAgain: true },
+    messages: { granted: false, canAskAgain: true },
+  });
+  
   const drawerAnimValue = useRef(new Animated.Value(0)).current;
   const backdropAnimValue = useRef(new Animated.Value(0)).current;
+
+  // Global permission checking function
+  const checkGlobalPermissionStatuses = async () => {
+    try {
+      const [locationStatus, mediaLibraryStatus, smsPermissionStatus] = await Promise.all([
+        Location.getForegroundPermissionsAsync().catch(() => ({ granted: false, canAskAgain: true })),
+        MediaLibrary.getPermissionsAsync().catch((error) => {
+          console.log('Media library permission check limited in Expo Go:', error.message);
+          return { granted: false, canAskAgain: true };
+        }),
+        Promise.resolve(false), // Fallback for SMS permission check
+      ]);
+
+      const newStatuses = {
+        camera: {
+          granted: cameraPermission?.granted || false,
+          canAskAgain: cameraPermission?.canAskAgain ?? true,
+        },
+        location: {
+          granted: locationStatus.granted,
+          canAskAgain: locationStatus.canAskAgain,
+        },
+        photos: {
+          granted: mediaLibraryStatus.granted,
+          canAskAgain: mediaLibraryStatus.canAskAgain,
+        },
+        messages: { 
+          granted: smsPermissionStatus !== false, 
+          canAskAgain: smsPermissionStatus === false
+        },
+      };
+
+      // Only update if any status has actually changed - with more stable comparison
+      const hasChanged = Object.keys(newStatuses).some(key => {
+        const oldStatus = globalPermissionStatuses[key as keyof typeof globalPermissionStatuses];
+        const newStatus = newStatuses[key as keyof typeof newStatuses];
+        const changed = oldStatus?.granted !== newStatus?.granted || oldStatus?.canAskAgain !== newStatus?.canAskAgain;
+        
+        if (changed) {
+          console.log(`Permission ${key} changed: granted ${oldStatus?.granted} -> ${newStatus?.granted}, canAskAgain ${oldStatus?.canAskAgain} -> ${newStatus?.canAskAgain}`);
+        }
+        
+        return changed;
+      });
+
+      if (hasChanged) {
+        console.log('Updating global permission statuses');
+        setGlobalPermissionStatuses(newStatuses);
+      }
+    } catch (error) {
+      console.error('❌ Error checking global permissions:', error);
+    }
+  };
+
+  // Check permissions immediately when app loads
+  useEffect(() => {
+    const checkImmediately = async () => {
+      await checkGlobalPermissionStatuses();
+    };
+    checkImmediately();
+
+    // Set up interval for periodic checks - reduced frequency to avoid conflicts
+    const interval = setInterval(() => {
+      checkGlobalPermissionStatuses();
+    }, 10000); // Check every 10 seconds (reduced from 5)
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update permissions when camera permission hook updates - with debounce
+  useEffect(() => {
+    if (cameraPermission) {
+      // Add a small delay to prevent rapid updates
+      const timeout = setTimeout(() => {
+        checkGlobalPermissionStatuses();
+      }, 200);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [cameraPermission]);
+
+  // Handle app state changes - reduced frequency to prevent conflicts
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active') {
+        // Only check once when app becomes active, with longer delay
+        setTimeout(() => {
+          checkGlobalPermissionStatuses();
+        }, 1000);
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   const handleGlobalDrawerOpen = (type: string, title: string, options: string[], currentValue: string, onSelect: (value: string) => void) => {
     setDrawerTitle(title);
@@ -98,16 +208,68 @@ export default function MainScreen() {
     })
   ).current;
 
+  // Global permission request function
+  const handleGlobalPermissionRequest = async (permissionId: string) => {
+    try {      
+      switch (permissionId) {
+        case 'camera':
+          await requestCameraPermission();
+          break;
+        case 'location':
+          await Location.requestForegroundPermissionsAsync();
+          break;
+        case 'photos':
+          try {
+            await MediaLibrary.requestPermissionsAsync();
+          } catch (error: any) {
+            if (error.message?.includes('Expo Go')) {
+              Alert.alert(
+                'Limited in Expo Go', 
+                'Photo permissions have limited functionality in Expo Go. For full testing, create a development build.',
+                [{ text: 'OK' }]
+              );
+            } else {
+              throw error;
+            }
+          }
+          break;
+        case 'messages':
+          Alert.alert(
+            'SMS Permission',
+            'SMS permission functionality is temporarily disabled. This will be enabled in the production build.',
+            [{ text: 'OK' }]
+          );
+          return;
+        default:
+          return;
+      }
+
+      // After requesting, check all permissions to update state - with longer delay
+      setTimeout(() => {
+        checkGlobalPermissionStatuses();
+      }, 500);
+    } catch (error) {
+      console.error('Error requesting permission:', error);
+      Alert.alert('Permission Error', 'Unable to request permission. Try on a physical device for full functionality.');
+    }
+  };
+
   const renderScreen = () => {
     switch (activeTab) {
       case 'Profile':
         return <ProfileScreen onDrawerOpen={handleGlobalDrawerOpen} />;
       case 'Permission':
-        return <PermissionsScreen />;
+        return <PermissionsScreen 
+          globalPermissionStatuses={globalPermissionStatuses}
+          onPermissionRequest={handleGlobalPermissionRequest}
+        />;
       case 'Email':
         return <EmailScreen />;
       default:
-        return <PermissionsScreen />;
+        return <PermissionsScreen 
+          globalPermissionStatuses={globalPermissionStatuses}
+          onPermissionRequest={handleGlobalPermissionRequest}
+        />;
     }
   };
 
