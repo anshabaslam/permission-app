@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
@@ -7,6 +8,7 @@ import EmailScreen from '../screens/EmailScreen';
 
 export default function MainScreen() {
   const [activeTab, setActiveTab] = useState<'Profile' | 'Permission' | 'Email'>('Permission');
+  const insets = useSafeAreaInsets();
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -63,7 +65,8 @@ export default function MainScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={getHeaderStyles().backgroundColor} />
+      <StatusBar barStyle="dark-content" backgroundColor={getHeaderStyles().backgroundColor} translucent={Platform.OS === 'android'} />
+      <View style={[styles.statusBarSpacer, { height: Platform.OS === 'android' ? insets.top : 0, backgroundColor: getHeaderStyles().backgroundColor }]} />
       <SafeAreaView style={[styles.safeArea, getSafeAreaStyles()]}>
         {/* Header */}
         <View style={[styles.header, getHeaderStyles()]}>
@@ -117,6 +120,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  statusBarSpacer: {
+    width: '100%',
   },
   safeArea: {
     flex: 1,

@@ -1,12 +1,11 @@
 import React from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import MainScreen from './src/components/MainScreen';
 
 export default function App() {
   return (
-    <>
-      <StatusBar style="dark" />
+    <SafeAreaProvider>
       <MainScreen />
-    </>
+    </SafeAreaProvider>
   );
 }
