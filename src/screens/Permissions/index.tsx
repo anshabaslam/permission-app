@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useLayoutEffect } from 'react';
+import { View, Text, Alert, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './styles';
@@ -84,6 +84,20 @@ export default function PermissionsScreen({
   onPermissionRequest
 }: PermissionsScreenProps) {
   const insets = useSafeAreaInsets();
+  const [needsScroll, setNeedsScroll] = useState(false);
+  const screenHeight = Dimensions.get('window').height;
+
+  useLayoutEffect(() => {
+    // Calculate if content needs scrolling
+    const availableHeight = screenHeight - insets.top - insets.bottom;
+    const estimatedContentHeight = 
+      100 + // description and margins
+      (permissions.length * 62) + // permission items
+      40 + // security note  
+      80; // continue button and padding
+    
+    setNeedsScroll(estimatedContentHeight > availableHeight);
+  }, [screenHeight, insets]);
   
   // Use global permission statuses - already pre-loaded from MainScreen
   const permissions: Permission[] = [
@@ -151,11 +165,10 @@ export default function PermissionsScreen({
         requestPermission(permission.id);
       }
     }
-    // Note: No longer checking permissions here - handled globally in MainScreen
   };
 
-  return (
-    <View style={styles.container}>
+  const renderContent = () => (
+    <>
       <View style={styles.topContent}>
         <Text style={styles.description}>
           Enable access to automate receipt capture and mileage tracking.
@@ -174,7 +187,7 @@ export default function PermissionsScreen({
         </View>
       </View>
 
-      <View style={styles.spacer} />
+      {!needsScroll && <View style={styles.spacer} />}
 
       <View style={[styles.bottomContent, { paddingBottom: 20 + insets.bottom }]}>
         <View style={styles.securityNote}>
@@ -188,6 +201,22 @@ export default function PermissionsScreen({
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
+    </>
+  );
+
+  return (
+    <View style={styles.container}>
+      {needsScroll ? (
+        <ScrollView 
+          style={{ flex: 1 }} 
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {renderContent()}
+        </ScrollView>
+      ) : (
+        renderContent()
+      )}
     </View>
   );
 }
