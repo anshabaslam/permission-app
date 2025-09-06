@@ -60,6 +60,10 @@ cd android
 npx eas build --platform ios --profile production
 ```
 
+### 📱 APK Installation Note
+
+**Important for Test APK Installation**: Since this is a developer/test APK and not from the Play Store, some devices may show a "harmful app" warning due to Google Play Protect. In such cases, you can temporarily disable Play Protect while installing. This is a common situation with unsigned test builds and does not indicate any issue with the app itself.
+
 ## 📦 Libraries & Packages Used
 
 ### Core Framework
