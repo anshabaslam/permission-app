@@ -6,9 +6,9 @@ import { useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import * as MediaLibrary from 'expo-media-library';
 import { PermissionsAndroid } from 'react-native';
-import ProfileScreen from '../screens/ProfileScreen';
-import PermissionsScreen from '../screens/PermissionsScreenNew';
-import EmailScreen from '../screens/EmailScreen';
+import ProfileScreen from '../screens/Profile';
+import PermissionsScreen from '../screens/Permissions';
+import EmailScreen from '../screens/Email';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -397,10 +397,6 @@ export default function MainScreen() {
         return <PermissionsScreen 
           globalPermissionStatuses={globalPermissionStatuses}
           onPermissionRequest={handleGlobalPermissionRequest}
-          onRefreshPermissions={() => {
-            console.log('🔄 Manual permission refresh requested...');
-            checkGlobalPermissionStatuses();
-          }}
         />;
       case 'Email':
         return <EmailScreen />;
@@ -408,10 +404,6 @@ export default function MainScreen() {
         return <PermissionsScreen 
           globalPermissionStatuses={globalPermissionStatuses}
           onPermissionRequest={handleGlobalPermissionRequest}
-          onRefreshPermissions={() => {
-            console.log('🔄 Manual permission refresh requested...');
-            checkGlobalPermissionStatuses();
-          }}
         />;
     }
   };

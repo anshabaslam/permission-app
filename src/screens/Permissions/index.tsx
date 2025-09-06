@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// SMS functionality handled using only native Android PermissionsAndroid API
+import { styles } from './styles';
 
 interface Permission {
   id: string;
@@ -78,13 +77,11 @@ interface PermissionsScreenProps {
     messages: { granted: boolean; canAskAgain: boolean };
   };
   onPermissionRequest?: (permissionId: string) => void;
-  onRefreshPermissions?: () => void;
 }
 
 export default function PermissionsScreen({ 
   globalPermissionStatuses, 
-  onPermissionRequest,
-  onRefreshPermissions
+  onPermissionRequest
 }: PermissionsScreenProps) {
   const insets = useSafeAreaInsets();
   
@@ -127,13 +124,8 @@ export default function PermissionsScreen({
   };
 
   const handlePermissionPress = (permission: Permission) => {
-    // For messages permission, if granted, inform user they need to go to settings to revoke
+    // For messages permission, if granted, do nothing (no popup)
     if (permission.id === 'messages' && permission.status?.granted) {
-      Alert.alert(
-        'Messages Permission Granted',
-        'SMS permissions are managed by the system. To revoke this permission, go to Settings > Apps > Permission App > Permissions.',
-        [{ text: 'OK' }]
-      );
       return;
     }
 
@@ -169,17 +161,6 @@ export default function PermissionsScreen({
           Enable access to automate receipt capture and mileage tracking.
         </Text>
         
-        {/* Refresh Button for Testing */}
-        {onRefreshPermissions && (
-          <TouchableOpacity 
-            style={styles.refreshButton} 
-            onPress={onRefreshPermissions}
-          >
-            <Ionicons name="refresh" size={16} color="#6366F1" />
-            <Text style={styles.refreshButtonText}>Refresh Status</Text>
-          </TouchableOpacity>
-        )}
-        
         <View style={styles.permissionsCard}>
           {permissions.map((permission, index) => (
             <View key={permission.id}>
@@ -210,173 +191,3 @@ export default function PermissionsScreen({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F0FF',
-    justifyContent: 'space-between',
-  },
-  topContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  spacer: {
-    flex: 1,
-  },
-  bottomContent: {
-    paddingHorizontal: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 18,
-    marginBottom: 16,
-    paddingHorizontal: 2,
-  },
-  permissionsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-    marginBottom: 20,
-  },
-  permissionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    minHeight: 52,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-    marginLeft: 48,
-  },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  permissionInfo: {
-    flex: 1,
-    marginRight: 8,
-  },
-  permissionName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
-    letterSpacing: -0.1,
-  },
-  permissionDescription: {
-    fontSize: 12,
-    color: '#6B7280',
-    lineHeight: 16,
-    letterSpacing: -0.1,
-    flexWrap: 'wrap',
-  },
-  permissionStatus: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: -0.1,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  permissionStatusGranted: {
-    color: '#10B981',
-  },
-  permissionStatusDenied: {
-    color: '#EF4444',
-  },
-  toggleContainer: {
-    marginLeft: 8,
-    alignItems: 'center',
-  },
-  toggle: {
-    width: 44,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#EF4444',
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  toggleActive: {
-    backgroundColor: '#34D399',
-  },
-  toggleThumb: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#FFFFFF',
-    position: 'absolute',
-    left: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  toggleThumbActive: {
-    left: 20,
-  },
-  securityNote: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 8,
-    marginBottom: 12,
-  },
-  lockIcon: {
-    marginBottom: 6,
-  },
-  securityText: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 16,
-    letterSpacing: -0.1,
-  },
-  continueButton: {
-    backgroundColor: '#E5E7EB',
-    borderRadius: 22,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  continueButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#9CA3AF',
-    letterSpacing: -0.2,
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F3F0FF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#C7B9ED',
-  },
-  refreshButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6366F1',
-    marginLeft: 4,
-    letterSpacing: -0.1,
-  },
-});

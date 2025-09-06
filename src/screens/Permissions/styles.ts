@@ -1,0 +1,151 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F0FF',
+    justifyContent: 'space-between',
+  },
+  topContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  spacer: {
+    flex: 1,
+  },
+  bottomContent: {
+    paddingHorizontal: 20,
+  },
+  description: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 2,
+  },
+  permissionsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+    marginBottom: 20,
+  },
+  permissionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    minHeight: 52,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginLeft: 48,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  permissionInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  permissionName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 2,
+    letterSpacing: -0.1,
+  },
+  permissionDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    lineHeight: 16,
+    letterSpacing: -0.1,
+    flexWrap: 'wrap',
+  },
+  permissionStatus: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: -0.1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  permissionStatusGranted: {
+    color: '#10B981',
+  },
+  permissionStatusDenied: {
+    color: '#EF4444',
+  },
+  toggleContainer: {
+    marginLeft: 8,
+    alignItems: 'center',
+  },
+  toggle: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#EF4444',
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  toggleActive: {
+    backgroundColor: '#34D399',
+  },
+  toggleThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    left: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    left: 20,
+  },
+  securityNote: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    marginBottom: 12,
+  },
+  lockIcon: {
+    marginBottom: 6,
+  },
+  securityText: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+    letterSpacing: -0.1,
+  },
+  continueButton: {
+    backgroundColor: '#E5E7EB',
+    borderRadius: 22,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  continueButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    letterSpacing: -0.2,
+  },
+});

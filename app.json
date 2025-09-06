@@ -4,14 +4,14 @@
     "slug": "permission-pro",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "description": "Secure permission management app for Android and iOS devices. Easily manage camera, location, photos, and SMS permissions with a clean, intuitive interface.",
     "privacy": "public",
     "splash": {
-      "image": "./assets/splash-screen.png",
-      "resizeMode": "cover",
+      "image": "./assets/logo2.png",
+      "resizeMode": "contain",
       "backgroundColor": "#F3F0FF"
     },
     "ios": {
@@ -24,7 +24,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#F3F0FF"
       },
       "edgeToEdgeEnabled": true,
@@ -42,13 +42,13 @@
       "usesCleartextTraffic": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.png"
     },
+    "owner": "anshab00",
     "extra": {
       "eas": {
-        "projectId": "bf044075-bec9-416b-b770-336a2d8deba7"
+        "projectId": "eec2fda4-a1a8-4357-8fcd-f02755d0ebcd"
       }
-    },
-    "owner": "anshab00"
+    }
   }
 }
