@@ -1,19 +1,107 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar, Alert, Image, Platform, Animated, Dimensions, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ProfileScreen from '../screens/ProfileScreen';
 import PermissionsScreen from '../screens/PermissionsScreenNew';
 import EmailScreen from '../screens/EmailScreen';
 
+const { height: screenHeight } = Dimensions.get('window');
+
 export default function MainScreen() {
   const [activeTab, setActiveTab] = useState<'Profile' | 'Permission' | 'Email'>('Permission');
   const insets = useSafeAreaInsets();
+  
+  // Global drawer state
+  const [isGlobalDrawerVisible, setIsGlobalDrawerVisible] = useState(false);
+  const [drawerTitle, setDrawerTitle] = useState('');
+  const [drawerOptions, setDrawerOptions] = useState<string[]>([]);
+  const [drawerOnSelect, setDrawerOnSelect] = useState<((value: string) => void) | null>(null);
+  
+  const drawerAnimValue = useRef(new Animated.Value(0)).current;
+  const backdropAnimValue = useRef(new Animated.Value(0)).current;
+
+  const handleGlobalDrawerOpen = (type: string, title: string, options: string[], currentValue: string, onSelect: (value: string) => void) => {
+    setDrawerTitle(title);
+    setDrawerOptions(options);
+    setDrawerOnSelect(() => onSelect);
+    setIsGlobalDrawerVisible(true);
+    
+    Animated.parallel([
+      Animated.timing(drawerAnimValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnimValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeGlobalDrawer = () => {
+    Animated.parallel([
+      Animated.timing(drawerAnimValue, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnimValue, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsGlobalDrawerVisible(false);
+      setDrawerTitle('');
+      setDrawerOptions([]);
+      setDrawerOnSelect(null);
+    });
+  };
+
+  const selectGlobalOption = (option: string) => {
+    if (drawerOnSelect) {
+      drawerOnSelect(option);
+    }
+    closeGlobalDrawer();
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return gestureState.dy > 5;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const dragDistance = Math.max(0, gestureState.dy);
+        const dragPercentage = Math.min(dragDistance / 200, 1);
+        drawerAnimValue.setValue(1 - dragPercentage);
+        backdropAnimValue.setValue(1 - dragPercentage);
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dy > 100) {
+          closeGlobalDrawer();
+        } else {
+          Animated.parallel([
+            Animated.spring(drawerAnimValue, {
+              toValue: 1,
+              useNativeDriver: true,
+            }),
+            Animated.spring(backdropAnimValue, {
+              toValue: 1,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      },
+    })
+  ).current;
 
   const renderScreen = () => {
     switch (activeTab) {
       case 'Profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onDrawerOpen={handleGlobalDrawerOpen} />;
       case 'Permission':
         return <PermissionsScreen />;
       case 'Email':
@@ -112,6 +200,65 @@ export default function MainScreen() {
           {renderScreen()}
         </View>
       </SafeAreaView>
+      
+      {/* Global Custom Bottom Drawer */}
+      {isGlobalDrawerVisible && (
+        <>
+          <Animated.View 
+            style={[
+              styles.globalModalBackground,
+              {
+                opacity: backdropAnimValue,
+              }
+            ]}
+          >
+            <TouchableOpacity 
+              style={StyleSheet.absoluteFill} 
+              onPress={closeGlobalDrawer}
+              activeOpacity={1}
+            />
+          </Animated.View>
+          
+          <Animated.View 
+            style={[
+              styles.globalDrawerContainer, 
+              { 
+                paddingBottom: insets.bottom,
+                transform: [
+                  {
+                    translateY: drawerAnimValue.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [screenHeight * 0.5, 0],
+                    })
+                  }
+                ]
+              }
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.drawerHandle} />
+            <View style={styles.drawerHeader}>
+              <Text style={styles.drawerTitle}>{drawerTitle}</Text>
+              <TouchableOpacity onPress={closeGlobalDrawer} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.optionsList}>
+              {drawerOptions.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.optionItem}
+                  onPress={() => selectGlobalOption(option)}
+                >
+                  <Text style={styles.optionText}>{option}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        </>
+      )}
     </View>
   );
 }
@@ -201,5 +348,69 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  // Global Drawer Styles
+  globalModalBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1000,
+  },
+  globalDrawerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '50%',
+    minHeight: '40%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1001,
+  },
+  drawerHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  drawerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  optionsList: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F9FAFB',
+  },
+  optionText: {
+    fontSize: 15,
+    color: '#1F2937',
+    flex: 1,
+    fontWeight: '400',
   },
 });

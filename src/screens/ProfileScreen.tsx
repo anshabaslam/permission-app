@@ -3,11 +3,90 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export default function ProfileScreen() {
+interface ProfileScreenProps {
+  onDrawerOpen?: (type: 'achievement' | 'workType' | 'sector', title: string, options: string[], currentValue: string, onSelect: (value: string) => void) => void;
+}
+
+export default function ProfileScreen({ onDrawerOpen }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
-  const [achievement] = useState('Separate personal and business...');
-  const [workType] = useState('Freelancer / Independent Contr...');
-  const [sector] = useState('Real Estate (Agents, Property M...');
+  const [achievement, setAchievement] = useState('Separate personal and business expenses');
+  const [workType, setWorkType] = useState('Freelancer / Independent Contractor');
+  const [sector, setSector] = useState('Real Estate (Agents, Property Management)');
+  const [drawerType, setDrawerType] = useState<'achievement' | 'workType' | 'sector' | null>(null);
+
+  const achievementOptions = [
+    'Separate personal and business expenses',
+    'Track tax deductible expenses',
+    'Monitor cash flow and budgeting',
+    'Prepare for tax season',
+    'Organize receipts digitally'
+  ];
+
+  const workTypeOptions = [
+    'Freelancer / Independent Contractor',
+    'Small Business Owner',
+    'Consultant',
+    'Real Estate Agent',
+    'Sales Representative',
+    'Self-Employed Professional'
+  ];
+
+  const sectorOptions = [
+    'Real Estate (Agents, Property Management)',
+    'Technology / Software',
+    'Healthcare / Medical',
+    'Marketing / Advertising',
+    'Construction / Trades',
+    'Retail / E-commerce',
+    'Finance / Accounting',
+    'Education / Training',
+    'Other'
+  ];
+
+  const openDrawer = (type: 'achievement' | 'workType' | 'sector') => {
+    if (onDrawerOpen) {
+      const options = getCurrentOptionsForType(type);
+      const title = getTitleForType(type);
+      const currentValue = getCurrentValueForType(type);
+      
+      onDrawerOpen(type, title, options, currentValue, (selectedValue) => {
+        selectOption(selectedValue);
+      });
+    }
+  };
+
+  const selectOption = (option: string) => {
+    if (drawerType === 'achievement') {
+      setAchievement(option);
+    } else if (drawerType === 'workType') {
+      setWorkType(option);
+    } else if (drawerType === 'sector') {
+      setSector(option);
+    }
+    setDrawerType(null);
+  };
+
+  const getCurrentOptionsForType = (type: 'achievement' | 'workType' | 'sector') => {
+    if (type === 'achievement') return achievementOptions;
+    if (type === 'workType') return workTypeOptions;
+    if (type === 'sector') return sectorOptions;
+    return [];
+  };
+
+  const getTitleForType = (type: 'achievement' | 'workType' | 'sector') => {
+    if (type === 'achievement') return 'What are you hoping to achieve?';
+    if (type === 'workType') return 'Who are you, how do you work?';
+    if (type === 'sector') return 'What sector do you primarily operate in?';
+    return '';
+  };
+
+  const getCurrentValueForType = (type: 'achievement' | 'workType' | 'sector') => {
+    if (type === 'achievement') return achievement;
+    if (type === 'workType') return workType;
+    if (type === 'sector') return sector;
+    return '';
+  };
+
 
   return (
     <View style={styles.container}>
@@ -22,7 +101,7 @@ export default function ProfileScreen() {
               <View style={styles.labelBackground} />
               <Text style={styles.label}>What are you hoping to achieve?</Text>
             </View>
-            <TouchableOpacity style={styles.dropdown}>
+            <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('achievement')}>
               <Text style={styles.dropdownText}>{achievement}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
@@ -35,7 +114,7 @@ export default function ProfileScreen() {
               <View style={styles.labelBackground} />
               <Text style={styles.label}>Who are you, how do you work?</Text>
             </View>
-            <TouchableOpacity style={styles.dropdown}>
+            <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('workType')}>
               <Text style={styles.dropdownText}>{workType}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
@@ -48,7 +127,7 @@ export default function ProfileScreen() {
               <View style={styles.labelBackground} />
               <Text style={styles.label}>What sector do you primarily operate in?</Text>
             </View>
-            <TouchableOpacity style={styles.dropdown}>
+            <TouchableOpacity style={styles.dropdown} onPress={() => openDrawer('sector')}>
               <Text style={styles.dropdownText}>{sector}</Text>
               <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
@@ -63,6 +142,7 @@ export default function ProfileScreen() {
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }
@@ -120,15 +200,6 @@ const styles = StyleSheet.create({
     right: -4,
     height: 18,
     backgroundColor: '#F3F0FF',
-    ...Platform.select({
-      android: {
-        elevation: 5,
-        zIndex: 5,
-      },
-      ios: {
-        zIndex: 1,
-      },
-    }),
   },
   label: {
     fontSize: 12,
@@ -152,15 +223,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: '#9CA3AF',
     paddingHorizontal: 14,
     paddingVertical: 12,
     minHeight: 48,
-    ...Platform.select({
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   dropdownText: {
     fontSize: 14,
