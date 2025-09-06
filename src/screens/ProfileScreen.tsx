@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const [achievement] = useState('Separate personal and business...');
   const [workType] = useState('Freelancer / Independent Contr...');
   const [sector] = useState('Real Estate (Agents, Property M...');
@@ -22,7 +24,7 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity style={styles.dropdown}>
               <Text style={styles.dropdownText}>{achievement}</Text>
-              <Ionicons name="chevron-down" size={20} color="#6366F1" />
+              <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
         </View>
@@ -35,7 +37,7 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity style={styles.dropdown}>
               <Text style={styles.dropdownText}>{workType}</Text>
-              <Ionicons name="chevron-down" size={20} color="#6366F1" />
+              <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
         </View>
@@ -48,13 +50,15 @@ export default function ProfileScreen() {
             </View>
             <TouchableOpacity style={styles.dropdown}>
               <Text style={styles.dropdownText}>{sector}</Text>
-              <Ionicons name="chevron-down" size={20} color="#6366F1" />
+              <Ionicons name="chevron-down" size={18} color="#6366F1" />
             </TouchableOpacity>
           </View>
         </View>
       </View>
 
-      <View style={styles.bottomContent}>
+      <View style={styles.spacer} />
+
+      <View style={[styles.bottomContent, { paddingBottom: 16 + insets.bottom }]}>
         <TouchableOpacity style={styles.continueButton}>
           <Text style={styles.continueButtonText}>Continue</Text>
         </TouchableOpacity>
@@ -67,25 +71,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F0FF',
+    justifyContent: 'space-between',
   },
   topContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  spacer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
   },
   bottomContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
   },
   description: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 20,
-    paddingHorizontal: 4,
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 2,
   },
   formSection: {
-    marginBottom: 24,
+    marginBottom: 18,
   },
   dropdownContainer: {
     position: 'relative',
@@ -143,12 +150,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: '#D1D5DB',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    minHeight: 56,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: 48,
     ...Platform.select({
       android: {
         elevation: 1,
@@ -156,19 +163,20 @@ const styles = StyleSheet.create({
     }),
   },
   dropdownText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#1F2937',
     flex: 1,
     fontWeight: '500',
   },
   continueButton: {
     backgroundColor: '#6366F1',
-    borderRadius: 25,
-    paddingVertical: 14,
+    borderRadius: 22,
+    paddingVertical: 12,
     alignItems: 'center',
+    marginHorizontal: 4,
   },
   continueButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
   },

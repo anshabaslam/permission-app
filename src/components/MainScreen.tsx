@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 13,
     alignItems: 'center',
   },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '500',
     color: '#8B7BB8',
     letterSpacing: -0.1,

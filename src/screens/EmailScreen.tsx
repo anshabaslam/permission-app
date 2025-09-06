@@ -1,13 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EmailScreen() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <View style={styles.container}>
       <View style={styles.topContent}>
         <Text style={styles.description}>
-          Connect to your email to unlock automatic receipt and invoice detection. No more forwarding or manual uploads.
+          Connect to your email for automatic receipt detection.
         </Text>
         
         <View style={styles.providerRow}>
@@ -25,7 +28,7 @@ export default function EmailScreen() {
           
           <TouchableOpacity style={styles.providerCard}>
             <View style={[styles.providerIcon, styles.outlookIcon]}>
-              <Ionicons name="mail" size={24} color="#0078D4" />
+              <Ionicons name="mail" size={20} color="#0078D4" />
             </View>
             <Text style={styles.providerTitle}>Connect Microsoft</Text>
             <Text style={styles.providerTitle}>365 (Outlook)</Text>
@@ -37,11 +40,13 @@ export default function EmailScreen() {
         </View>
       </View>
 
-      <View style={styles.bottomContent}>
+      <View style={styles.spacer} />
+
+      <View style={[styles.bottomContent, { paddingBottom: 16 + insets.bottom }]}>
         <View style={styles.securityNote}>
-          <Ionicons name="lock-closed" size={20} color="#6B7280" />
+          <Ionicons name="lock-closed" size={16} color="#6B7280" />
           <Text style={styles.securityText}>
-            We'll only scan for receipts - not your personal emails.{'\n'}Your credentials are never shared with us.
+            We'll only scan for receipts - not personal emails.
           </Text>
         </View>
         
@@ -57,22 +62,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F3F0FF',
+    justifyContent: 'space-between',
   },
   topContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  spacer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
   },
   bottomContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
   },
   description: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 20,
-    paddingHorizontal: 4,
+    lineHeight: 18,
+    marginBottom: 16,
+    paddingHorizontal: 2,
   },
   providerRow: {
     flexDirection: 'row',
@@ -83,12 +91,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 32,
     position: 'relative',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -97,81 +105,82 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   providerIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   outlookIcon: {
     backgroundColor: '#E6F3FF',
   },
   gmailLogo: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
     color: '#DB4437',
   },
   providerTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
     color: '#1F2937',
-    lineHeight: 20,
+    lineHeight: 16,
     textAlign: 'center',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   providerDescription: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#9CA3AF',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#6366F1',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: -16,
+    bottom: -14,
     alignSelf: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowRadius: 2,
+    elevation: 2,
   },
   addButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   securityNote: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
-    marginBottom: 16,
+    paddingHorizontal: 8,
+    marginBottom: 12,
   },
   securityText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
-    marginLeft: 8,
+    marginLeft: 6,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 16,
     letterSpacing: -0.1,
+    flex: 1,
   },
   continueButton: {
     backgroundColor: '#E5E7EB',
-    borderRadius: 25,
-    paddingVertical: 14,
+    borderRadius: 22,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 4,
   },
   continueButtonText: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '600',
     color: '#9CA3AF',
     letterSpacing: -0.2,

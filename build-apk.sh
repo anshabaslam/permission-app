@@ -1,18 +1,18 @@
 #!/bin/bash
 
-echo "🚀 Building Android APK for HAI Permissions App"
-echo "============================================="
+echo "🚀 Building Android APK for Permission App"
+echo "=========================================="
 echo ""
 
 # Check if we're in the right directory
 if [ ! -f "app.json" ]; then
     echo "❌ Error: Please run this script from the project root directory"
-    echo "   cd /Users/apple/Desktop/hai/hai-app"
+    echo "   cd /Users/apple/Desktop/test/permission-app"
     echo "   ./build-apk.sh"
     exit 1
 fi
 
-echo "📋 Project: HAI Permissions App"
+echo "📋 Project: Permission App"
 echo "📦 Build Profile: preview (APK format)"
 echo "🏗️  Platform: Android"
 echo ""
@@ -32,7 +32,8 @@ echo "📱 Install the APK on your Android device to test all permissions."
 echo ""
 echo "🧪 Features to test:"
 echo "   - Camera permission (real device camera access)"
-echo "   - Location permission (real GPS access)"
-echo "   - Storage permission (real file system access)"
-echo "   - Demo mode toggle for UI testing"
+echo "   - Location permission (real GPS access)" 
+echo "   - Photos permission (real photo library access)"
+echo "   - SMS/Messages permission (real SMS reading access)"
+echo "   - Real-time permission status updates"
 echo ""
