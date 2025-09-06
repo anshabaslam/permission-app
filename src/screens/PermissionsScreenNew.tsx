@@ -78,11 +78,13 @@ interface PermissionsScreenProps {
     messages: { granted: boolean; canAskAgain: boolean };
   };
   onPermissionRequest?: (permissionId: string) => void;
+  onRefreshPermissions?: () => void;
 }
 
 export default function PermissionsScreen({ 
   globalPermissionStatuses, 
-  onPermissionRequest 
+  onPermissionRequest,
+  onRefreshPermissions
 }: PermissionsScreenProps) {
   const insets = useSafeAreaInsets();
   
@@ -166,6 +168,17 @@ export default function PermissionsScreen({
         <Text style={styles.description}>
           Enable access to automate receipt capture and mileage tracking.
         </Text>
+        
+        {/* Refresh Button for Testing */}
+        {onRefreshPermissions && (
+          <TouchableOpacity 
+            style={styles.refreshButton} 
+            onPress={onRefreshPermissions}
+          >
+            <Ionicons name="refresh" size={16} color="#6366F1" />
+            <Text style={styles.refreshButtonText}>Refresh Status</Text>
+          </TouchableOpacity>
+        )}
         
         <View style={styles.permissionsCard}>
           {permissions.map((permission, index) => (
@@ -345,5 +358,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#9CA3AF',
     letterSpacing: -0.2,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F3F0FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#C7B9ED',
+  },
+  refreshButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6366F1',
+    marginLeft: 4,
+    letterSpacing: -0.1,
   },
 });

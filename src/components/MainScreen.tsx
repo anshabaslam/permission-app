@@ -48,8 +48,11 @@ export default function MainScreen() {
         Platform.OS === 'android' 
           ? PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_SMS).then(result => {
               console.log('📱 Android SMS permission check result:', result, typeof result);
-              // Handle boolean result properly
-              return result === true;
+              console.log('📱 PermissionsAndroid.RESULTS.GRANTED:', PermissionsAndroid.RESULTS.GRANTED);
+              // Handle both boolean true and 'granted' string results
+              const isGranted = result === true || String(result) === 'granted' || String(result) === PermissionsAndroid.RESULTS.GRANTED;
+              console.log('📱 SMS permission isGranted:', isGranted);
+              return isGranted;
             }).catch((error) => {
               console.log('❌ Android SMS permission check error:', error);
               return false;
@@ -117,8 +120,8 @@ export default function MainScreen() {
           canAskAgain: mediaLibraryStatus.canAskAgain,
         },
         messages: { 
-          granted: Platform.OS === 'android' ? smsPermissionStatus === true : smsPermissionStatus === true, 
-          canAskAgain: Platform.OS === 'android' ? smsPermissionStatus !== true : smsPermissionStatus !== true
+          granted: smsPermissionStatus === true, 
+          canAskAgain: smsPermissionStatus !== true
         },
       };
 
@@ -182,14 +185,20 @@ export default function MainScreen() {
     }
   }, [cameraPermission?.granted, cameraPermission?.canAskAgain]); // Only depend on specific properties
 
-  // Handle app state changes - reduced frequency to prevent conflicts
+  // Handle app state changes - check permissions when app becomes active
   useEffect(() => {
     const handleAppStateChange = (nextAppState: string) => {
       if (nextAppState === 'active') {
-        // Only check once when app becomes active, with longer delay
+        console.log('📱 App became active - checking all permissions...');
+        // Check immediately when app becomes active (user might have changed settings)
         setTimeout(() => {
           checkGlobalPermissionStatuses();
-        }, 1000);
+        }, 500);
+        // Double-check after a longer delay for SMS specifically
+        setTimeout(() => {
+          console.log('🔄 Double-checking SMS permission after app became active...');
+          checkGlobalPermissionStatuses();
+        }, 2000);
       }
     };
 
@@ -430,6 +439,10 @@ export default function MainScreen() {
         return <PermissionsScreen 
           globalPermissionStatuses={globalPermissionStatuses}
           onPermissionRequest={handleGlobalPermissionRequest}
+          onRefreshPermissions={() => {
+            console.log('🔄 Manual permission refresh requested...');
+            checkGlobalPermissionStatuses();
+          }}
         />;
       case 'Email':
         return <EmailScreen />;
@@ -437,6 +450,10 @@ export default function MainScreen() {
         return <PermissionsScreen 
           globalPermissionStatuses={globalPermissionStatuses}
           onPermissionRequest={handleGlobalPermissionRequest}
+          onRefreshPermissions={() => {
+            console.log('🔄 Manual permission refresh requested...');
+            checkGlobalPermissionStatuses();
+          }}
         />;
     }
   };
