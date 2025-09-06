@@ -311,7 +311,7 @@ export default function PermissionsScreen() {
 
       <View style={[styles.bottomContent, { paddingBottom: 20 + insets.bottom }]}>
         <View style={styles.securityNote}>
-          <Ionicons name="lock-closed" size={16} color="#6B7280" />
+          <Ionicons name="lock-closed" size={16} color="#6B7280" style={styles.lockIcon} />
           <Text style={styles.securityText}>
             You'll see system permission popups. Please allow access.
           </Text>
@@ -429,20 +429,21 @@ const styles = StyleSheet.create({
     left: 20,
   },
   securityNote: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
     marginBottom: 12,
   },
+  lockIcon: {
+    marginBottom: 6,
+  },
   securityText: {
     fontSize: 12,
     color: '#6B7280',
-    marginLeft: 6,
     textAlign: 'center',
     lineHeight: 16,
     letterSpacing: -0.1,
-    flex: 1,
   },
   continueButton: {
     backgroundColor: '#E5E7EB',
