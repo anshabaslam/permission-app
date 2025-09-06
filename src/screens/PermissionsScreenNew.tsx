@@ -56,6 +56,12 @@ function PermissionItem({ permission, onPress }: PermissionItemProps) {
         <Text style={styles.permissionDescription}>{permission.description}</Text>
       </View>
       <View style={styles.toggleContainer}>
+        <Text style={[
+          styles.permissionStatus,
+          permission.status?.granted ? styles.permissionStatusGranted : styles.permissionStatusDenied
+        ]}>
+          {permission.status?.granted ? 'Granted' : 'Denied'}
+        </Text>
         <View style={[
           styles.toggle,
           permission.status?.granted && styles.toggleActive
@@ -271,8 +277,23 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
     flexWrap: 'wrap',
   },
+  permissionStatus: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: -0.1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  permissionStatusGranted: {
+    color: '#10B981',
+  },
+  permissionStatusDenied: {
+    color: '#EF4444',
+  },
   toggleContainer: {
     marginLeft: 8,
+    alignItems: 'center',
   },
   toggle: {
     width: 44,
